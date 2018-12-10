@@ -1,0 +1,14 @@
+---
+
+#
+#
+#
+
+- hosts: local
+  connection: local
+  gather_facts: False
+  tags:
+    - ec2_create
+
+  tasks:
+    - include: tasks/ec2_create.yml

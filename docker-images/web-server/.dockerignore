@@ -1,0 +1,5 @@
+### Application specific ignores:
+
+### Common ignores:
+**/.git*
+**/*.md

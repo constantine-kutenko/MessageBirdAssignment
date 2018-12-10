@@ -1,0 +1,65 @@
+---
+
+#
+#
+#
+
+variables:
+  IMAGE_NAME: "${CI_PROJECT_NAME}"
+  IMAGE_TAGS: "${CI_COMMIT_REF_NAME}"
+
+stages:
+  - create_aws_repo
+  - build
+
+create_aws_repo:
+  stage: create_aws_repo
+  image:
+    name: registry.REDACTED.net/awscli:latest
+    entrypoint: [""]
+  script:
+    - for AWS_REGION in ${AWS_REGIONS}; do
+        if aws ecr list-images --region ${AWS_REGION} --repository-name ${IMAGE_NAME}; then
+          echo "The repository \"${IMAGE_NAME}\" already exists in the region \"${AWS_REGION}\".";
+        else
+          echo "Creating the repository \"${IMAGE_NAME}\" in the region \"${AWS_REGION}\"...";
+          aws ecr create-repository --region ${AWS_REGION} --repository-name ${IMAGE_NAME};
+        fi;
+      done
+  tags:
+    - docker
+    - builder
+    - uk
+
+build-container:
+  stage: build
+  script:
+    - REGISTRIES=$(dig _docker-registry._tcp.REDACTED.net IN SRV +short | cut -d ' ' -f 4)
+    - for AWS_REGION in ${AWS_REGIONS}; do
+        REGISTRIES="${AWS_REGISTRY_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com. ${REGISTRIES}";
+        $(docker run --rm
+          -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+          -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+          registry.REDACTED.net/awscli:latest
+          aws ecr get-login --no-include-email --region ${AWS_REGION});
+      done
+    - BUILD_ID=$(docker build
+        --pull
+        --quiet
+        --shm-size=256M
+        --build-arg PROJECT_NAMESPACE=${CI_PROJECT_NAMESPACE}
+        --build-arg PROJECT_NAME=${CI_PROJECT_NAME}
+        $(for REGISTRY in ${REGISTRIES}; do
+            for TAG in ${IMAGE_TAGS}; do
+              echo --tag\ ${REGISTRY::-1}/${IMAGE_NAME}:${TAG}\ ;
+            done
+        done)
+        --file docker/Dockerfile .)
+    - for TAG in ${IMAGE_TAGS}; do
+        parallel docker push {} ":::" $(for REGISTRY in ${REGISTRIES}; do echo ${REGISTRY::-1}/${IMAGE_NAME}:${TAG}; done);
+      done
+    - docker rmi -f ${BUILD_ID}
+  tags:
+    - shell
+    - builder
+    - uk

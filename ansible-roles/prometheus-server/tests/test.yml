@@ -1,0 +1,11 @@
+---
+
+#
+# Syntax check:
+# ansible-playbook tests/test.yml -i tests/inventory --syntax-check
+#
+
+- hosts: localhost
+  remote_user: root
+  roles:
+    - prometheus-server

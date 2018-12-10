@@ -1,0 +1,10 @@
+---
+
+#
+#
+#
+
+name: web-server
+apiVersion: v1
+appVersion: 0.0.1
+description: web-server Helm chart for Kubernetes

@@ -1,0 +1,17 @@
+---
+
+# Default values for the chart set.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+registry_address: REDACTED.dkr.ecr.REDACTED.amazonaws.com
+replicaCount: 1
+location: "local"
+image:
+  name: web-server
+  tag: latest
+service:
+  type: ClusterIP
+  externalIPs: []
+  port: 80
+  targetPort: 80

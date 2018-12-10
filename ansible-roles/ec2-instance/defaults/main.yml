@@ -1,0 +1,22 @@
+---
+
+#
+#
+#
+
+site:
+  name: test
+  environment: testing
+
+ec2:
+  count: 1
+  name: prometheus-server
+  image: REDACTED
+  type: m3.large
+  region: REDACTED
+  vpc_id: REDACTED
+  vpc_subnet_id: REDACTED
+  security_group: prometheus-server
+  image_user: ec2-user
+  keypair: prometheus-server
+  private_key: "~/.ssh/messagebird/prometheus-server"

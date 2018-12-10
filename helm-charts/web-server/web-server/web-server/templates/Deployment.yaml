@@ -1,0 +1,54 @@
+---
+
+#
+#
+#
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: test
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+        tier: frontend
+    spec:
+      strategy:
+        type: Recreate
+      tolerations:
+        - key: node-role.kubernetes.io/voip
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/voip
+          operator: Exists
+          effect: NoExecute
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: kubernetes.io/web-server
+                    operator: In
+                    values: ["true"]
+              topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 5
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.registry_address }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          resources:
+            limits:
+              cpu: "100m"
+              memory: "200Mi"
+            requests:
+              cpu: "10m"
+              memory: "100Mi"
+          ports:
+            - name: web
+              containerPort: 80
